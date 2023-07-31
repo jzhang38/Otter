@@ -20,6 +20,7 @@ from transformers import (
 )
 import wandb
 from flamingo.modeling_flamingo import FlamingoForConditionalGeneration
+from flamingo.configuration_flamingo import FlamingoConfig
 from otter.modeling_otter import OtterForConditionalGeneration
 from pipeline.train.data import get_data
 from pipeline.train.distributed import world_info_from_env
@@ -91,6 +92,8 @@ def parse_args():
         type=str,
         help="constant, linear, or cosine",
     )
+    parser.add_argument("--beta1", default=0.9, type=float)
+    parser.add_argument("--beta2", default=0.999, type=float)
     parser.add_argument("--loss_multiplier_cc3m", type=float, default=1)
     parser.add_argument("--warmup_steps", default=1000, type=int)
     parser.add_argument("--warmup_steps_ratio", default=None, type=float)
@@ -340,6 +343,7 @@ def main():
                     local_files_only=args.offline,
                 )
             # model.text_tokenizer.add_special_tokens({"additional_special_tokens": ["<|endofchunk|>", "<image>", "<answer>"]})
+        
     else:
         model = None
 
@@ -376,8 +380,7 @@ def main():
 
     total_training_steps = cc3m_dataset.dataloader.num_batches * args.num_epochs
 
-    optimizer = torch.optim.AdamW(get_grouped_params(model), lr=args.learning_rate)
-
+    optimizer = torch.optim.AdamW(get_grouped_params(model), lr=args.learning_rate, betas=(args.beta1, args.beta2) )
     if args.rank == 0:
         print(f"Total training steps: {total_training_steps}")
 

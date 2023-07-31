@@ -515,8 +515,13 @@ class FlamingoModel(FlamingoPreTrainedModel):
         else:
             text_tokenizer = LlamaTokenizer.from_pretrained(config.text_config._name_or_path)
             lang_encoder = LlamaForCausalLM(config=config.text_config)
-
-        vision_encoder = CLIPVisionModel(config=config.vision_config)
+        import pdb; pdb.set_trace()
+        if config.vision_config._name_or_path == "eva02_enormous_patch14_clip_224.laion2b_plus":
+            import timm
+            vision_encoder = timm.create_model("eva02_enormous_patch14_clip_224.laion2b_plus", pretrained=True)
+            vision_encoder.forward = vision_encoder.forward_features
+        else:
+            vision_encoder = CLIPVisionModel(config=config.vision_config)
         text_tokenizer.add_special_tokens({"additional_special_tokens": ["<|endofchunk|>", "<image>"]})
         if text_tokenizer.pad_token is None:
             text_tokenizer.add_special_tokens({"pad_token": "<PAD>"})
@@ -537,7 +542,8 @@ class FlamingoModel(FlamingoPreTrainedModel):
         vision_encoder.output_tokens = True
         self.vision_encoder = vision_encoder
 
-        self.vis_dim = 1024
+        self.vis_dim = config.vision_config.hidden_size
+        
         self.perceiver = FlamingoPerceiverResampler(dim=self.vis_dim)
 
         self.lang_encoder.init_flamingo(
@@ -727,11 +733,22 @@ class FlamingoForConditionalGeneration(FlamingoPreTrainedModel):
             import pdb
 
             pdb.set_trace()
+        
         # else:
         #     text_tokenizer = LlamaTokenizer.from_pretrained(config.text_config._name_or_path)
         #     lang_encoder = LlamaForCausalLM(config=config.text_config)
 
-        vision_encoder = CLIPVisionModel(config=config.vision_config)
+        if config.vision_config._name_or_path == "eva02_enormous_patch14_clip_224.laion2b_plus":
+            import timm
+            lang_encoder.bfloat16()
+            vision_encoder = timm.create_model("eva02_enormous_patch14_clip_224.laion2b_plus", pretrained=True)
+            #dummy patch for compatibility
+            def dummy_forward(self, x):
+                return [self.forward_features(x)]
+            vision_encoder.__class__.forward = dummy_forward
+            vision_encoder.bfloat16()
+        else:
+            vision_encoder = CLIPVisionModel(config=config.vision_config)
         text_tokenizer.add_special_tokens({"additional_special_tokens": ["<|endofchunk|>", "<image>"]})
         if text_tokenizer.pad_token is None:
             text_tokenizer.add_special_tokens({"pad_token": "<PAD>"})
@@ -752,7 +769,8 @@ class FlamingoForConditionalGeneration(FlamingoPreTrainedModel):
         vision_encoder.output_tokens = True
         self.vision_encoder = vision_encoder
 
-        self.vis_dim = 1024
+        self.vis_dim = config.vision_config.hidden_size
+        print(self.vis_dim)
         self.perceiver = FlamingoPerceiverResampler(dim=self.vis_dim)
 
         self.lang_encoder.init_flamingo(
