@@ -164,6 +164,7 @@ class FlamingoPerceiverResampler(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Args:
+        
             x (torch.Tensor): image features
                 shape (b, T, F, v, D)
         Returns:
@@ -543,8 +544,8 @@ class FlamingoModel(FlamingoPreTrainedModel):
         self.vision_encoder = vision_encoder
 
         self.vis_dim = config.vision_config.hidden_size
-        
-        self.perceiver = FlamingoPerceiverResampler(dim=self.vis_dim)
+        depth = getattr(config, "perceiver_depth", 6)
+        self.perceiver = FlamingoPerceiverResampler(dim=self.vis_dim, depth=depth)
 
         self.lang_encoder.init_flamingo(
             media_token_id=self.media_token_id,
@@ -738,10 +739,10 @@ class FlamingoForConditionalGeneration(FlamingoPreTrainedModel):
         #     text_tokenizer = LlamaTokenizer.from_pretrained(config.text_config._name_or_path)
         #     lang_encoder = LlamaForCausalLM(config=config.text_config)
 
-        if config.vision_config._name_or_path == "eva02_enormous_patch14_clip_224.laion2b_plus":
+        if "eva02" in config.vision_config._name_or_path:
             import timm
             lang_encoder.bfloat16()
-            vision_encoder = timm.create_model("eva02_enormous_patch14_clip_224.laion2b_plus", pretrained=True)
+            vision_encoder = timm.create_model(config.vision_config._name_or_path, pretrained=True)
             #dummy patch for compatibility
             def dummy_forward(self, x):
                 return [self.forward_features(x)]
@@ -771,7 +772,8 @@ class FlamingoForConditionalGeneration(FlamingoPreTrainedModel):
 
         self.vis_dim = config.vision_config.hidden_size
         print(self.vis_dim)
-        self.perceiver = FlamingoPerceiverResampler(dim=self.vis_dim)
+        depth = getattr(config, "perceiver_depth", 6)
+        self.perceiver = FlamingoPerceiverResampler(dim=self.vis_dim, depth=depth)
 
         self.lang_encoder.init_flamingo(
             media_token_id=self.media_token_id,

@@ -3,7 +3,7 @@ open_flamingo.egg-info
 .vscode
 llama-7b-hf/*
 data/
-outputs/
+checkpoints/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

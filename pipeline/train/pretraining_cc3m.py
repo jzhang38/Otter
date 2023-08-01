@@ -196,7 +196,6 @@ def train_one_epoch(args, model, epoch, cc3m_loader, tokenizer, optimizer, lr_sc
 
         input_ids = batch_cc3m[1][0].to(device_id, non_blocking=True)
         attention_mask = batch_cc3m[1][1].to(device_id, non_blocking=True)
-
         labels = input_ids.clone()
         labels[labels == tokenizer.pad_token_id] = -100
         labels[:, 0] = -100
@@ -405,11 +404,11 @@ def main():
     # check if a checkpoint exists for this run
     args.external_save_dir = os.path.join(args.external_save_dir, args.run_name) if args.external_save_dir else args.run_name
     if os.path.exists(f"{args.external_save_dir}") and args.resume_from_checkpoint is True:
-        checkpoint_list = glob.glob(f"{args.external_save_dir}/checkpoint_steps*.pt")  # or you chould change to 'epoch*.pt'
+        checkpoint_list = glob.glob(f"{args.external_save_dir}/checkpoint_epoch*.pt")  # or you chould change to 'epoch*.pt'
         if len(checkpoint_list) == 0:
             print(f"Found no checkpoints for run {args.external_save_dir}.")
         else:
-            resume_from_checkpoint_path = sorted(checkpoint_list, key=lambda x: int(x.split("_")[-1].split("steps")[1].split(".")[0]))[-1]
+            resume_from_checkpoint_path = sorted(checkpoint_list, key=lambda x: int(x.split("_")[-1].split("epoch")[1].split(".")[0]))[-1]
             # resume_from_checkpoint_path = sorted(checkpoint_list, key=lambda x: int(x.split("_")[-1].split(".")[0]))[-1]
             print(f"Found checkpoint {resume_from_checkpoint_path} for run {args.external_save_dir}.")
 

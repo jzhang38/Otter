@@ -1,43 +1,45 @@
 
-accelerate launch --config_file=pipeline/accelerate_configs/accelerate_config_ddp.yaml  pipeline/train/pretraining_cc3m.py \
---external_save_dir outputs \
---run_name Flamingo-Llama2-Chat7B-CC3M_595K_debug \
---cc3m_shards "pipeline/utils/CC3M_595K_{0..7}.tar" \
---pretrained_model_name_or_path luodian/Flamingo-Llama2-Chat7B-CC3M \
---workers 1 \
+
+export PYTHONPATH=.
+accelerate launch --config_file=pipeline/accelerate_configs/accelerate_config_ddp.yaml \
+pipeline/train/pretraining_cc3m.py \
+--run_name=flamingo-llama2-cc3m-clip \
+--pretrained_model_name_or_path=checkpoints/flamingo-clip-l-llama2-chat-7B-init \
 --dataset_resampled \
---train_num_samples_cc3m 595000 \
 --batch_size_cc3m=32 \
+--num_epochs=6 \
 --report_to_wandb \
+--cc3m_shards="data/cc3m/{00000..00331}.tar" \
+--train_num_samples_cc3m=3000000 \
 --wandb_project=flamingo-llama2-pretrain \
+--external_save_dir=/home/luodian/projects/checkpoints \
+--checkpointing_steps=10000 \
+--save_hf_model \
+--workers=8 \
 --lr_scheduler=cosine \
---learning_rate=5e-5 \
---num_epochs=3 \
---warmup_steps_ratio=0.05 \
-
-python /home/peiyuan/peiyuan/Otter/flamingo/injecting_llama2_EVA02_into_flamingo.py --model_choice 7B --save_root_dir ./
-
-
+--delete_previous_checkpoint \
+--learning_rate=1e-4 \
+--warmup_steps_ratio=0.005
 
 
 export PYTHONPATH=.
-accelerate launch --main_process_port 1235 --config_file=pipeline/accelerate_configs/accelerate_config_ddp.yaml  pipeline/train/pretraining_cc3m.py \
---external_save_dir outputs \
---run_name Flamingo-EVA-E-Llama2-Chat7B-CC3M_595K_betas_0.9_0.95 \
---cc3m_shards "pipeline/utils/CC3M_595K_{0..7}.tar" \
---pretrained_model_name_or_path flamingo-eva02-e-llama2-chat-7B-init \
---workers 1 \
+CUDA_VISIBLE_DEVICES=4,5,6,7 accelerate launch --config_file=pipeline/accelerate_configs/accelerate_config_ddp.yaml --main_process_port 1234 \
+pipeline/train/pretraining_cc3m.py \
+--run_name=flamingo-llama2-cc3m-eva \
+--pretrained_model_name_or_path=checkpoints/flamingo-eva02-e-llama2-chat-7B-init \
 --dataset_resampled \
---train_num_samples_cc3m 595000 \
---batch_size_cc3m=16 \
+--batch_size_cc3m=32 \
+--num_epochs=6 \
 --report_to_wandb \
+--cc3m_shards="data/cc3m/{00000..00331}.tar" \
+--train_num_samples_cc3m=3000000 \
 --wandb_project=flamingo-llama2-pretrain \
+--external_save_dir=/home/luodian/projects/checkpoints \
+--checkpointing_steps=10000 \
+--save_hf_model \
+--workers=8 \
 --lr_scheduler=cosine \
---learning_rate=5e-5 \
---num_epochs=3 \
---warmup_steps_ratio=0.05 \
---logging_steps=100 \
---gradient_accumulation_steps=1 \
---beta1=0.9 \
---beta2=0.95 
+--delete_previous_checkpoint \
+--learning_rate=1e-4 \
+--warmup_steps_ratio=0.005
 

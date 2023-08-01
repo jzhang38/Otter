@@ -28,30 +28,33 @@ save_root_dir = args.save_root_dir
 if model_choice == "7B":
     config_file = "./flamingo/flamingo-llama2-chat-7B.json"
     state_dict_files = [
-        f"pytorch_model-00001-of-00002.bin",
-        f"pytorch_model-00002-of-00002.bin",
+        f"outputs/pytorch_model-00001-of-00002.bin",
+        f"outputs/pytorch_model-00002-of-00002.bin",
     ]
     save_path = f"{save_root_dir}/flamingo-llama2-chat-7B-init"
 elif model_choice == "13B":
     config_file = "./flamingo/flamingo-llama2-chat-13B.json"
     state_dict_files = [
-        f"pytorch_model-00001-of-00003.bin",
-        f"pytorch_model-00002-of-00003.bin",
-        f"pytorch_model-00003-of-00003.bin",
+        f"outputs/pytorch_model-00001-of-00003.bin",
+        f"outputs/pytorch_model-00002-of-00003.bin",
+        f"outputs/pytorch_model-00003-of-00003.bin",
     ]
     save_path = f"{save_root_dir}/flamingo-llama2-chat-13B-init"
 else:
     raise ValueError("Invalid model_choice. Choose either '13B' or '7B'.")
 
 config = FlamingoConfig.from_json_file(config_file)
-config.vision_config.hidden_size = 1792
+config.vision_config.hidden_size = 1024
+import pdb; pdb.set_trace()
+
 model = FlamingoForConditionalGeneration(config=config)
 
 # load flamingo's vision encoder from last checkpoint.
 # you can visit https://huggingface.co/luodian/openflamingo-9b-hf/tree/main to download the checkpoint.
 # AZP = "os.environ["AZP"]"
 import timm
-model.vision_encoder = timm.create_model("eva02_enormous_patch14_clip_224.laion2b_plus", pretrained=True)
+import pdb; pdb.set_trace()
+model.vision_encoder = timm.create_model("eva02_large_patch14_clip_224.merged2b", pretrained=True)
 
 # Loading vicuna weights
 state_dict = {}
